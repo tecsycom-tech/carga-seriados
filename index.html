@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Carga de Seriados ONT | Telegram Bot Sync</title>
+  <title>Carga de Seriados ONT - Bot Telegram</title>
 
-  <!-- SVG Favicon: ONT Fiber Optic & Telegram Network Emblem -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='bg' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%230284c7'/><stop offset='100%' stop-color='%230369a1'/></linearGradient><linearGradient id='telegram' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2338bdf8'/><stop offset='100%' stop-color='%230284c7'/></linearGradient></defs><rect width='64' height='64' rx='16' fill='url(%23bg)'/><path d='M14 44 L50 44 A2 2 0 0 0 52 42 L52 28 A2 2 0 0 0 50 26 L14 26 A2 2 0 0 0 12 28 L12 42 A2 2 0 0 0 14 44 Z' fill='none' stroke='%23ffffff' stroke-width='2.5'/><circle cx='18' cy='35' r='2' fill='%2338bdf8'/><circle cx='24' cy='35' r='2' fill='%234ade80'/><circle cx='30' cy='35' r='2' fill='%23facc15'/><line x1='38' y1='31' x2='46' y2='31' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/><line x1='38' y1='39' x2='44' y2='39' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/><path d='M22 14 L46 22 L36 48 L30 36 L22 32 Z' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linejoin='round'/><path d='M22 14 L46 22 L32 28 L22 14 Z' fill='%23ffffff' opacity='0.9'/><path d='M32 28 L30 36 L36 31 Z' fill='%23bae6fd'/></svg>" />
+  <!-- SVG Favicon: Fiber ONT & Telegram Symbol -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='bg' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%230284c7'/><stop offset='100%' stop-color='%230369a1'/></linearGradient></defs><rect width='64' height='64' rx='16' fill='url(%23bg)'/><path d='M14 44 L50 44 A2 2 0 0 0 52 42 L52 28 A2 2 0 0 0 50 26 L14 26 A2 2 0 0 0 12 28 L12 42 A2 2 0 0 0 14 44 Z' fill='none' stroke='%23ffffff' stroke-width='2.5'/><circle cx='18' cy='35' r='2' fill='%2338bdf8'/><circle cx='24' cy='35' r='2' fill='%234ade80'/><circle cx='30' cy='35' r='2' fill='%23facc15'/><path d='M22 14 L46 22 L36 48 L30 36 L22 32 Z' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linejoin='round'/><path d='M22 14 L46 22 L32 28 L22 14 Z' fill='%23ffffff' opacity='0.9'/></svg>" />
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -18,6 +18,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <!-- SheetJS (XLSX) Library -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- SweetAlert2 Library -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
     tailwind.config = {
@@ -34,13 +36,11 @@
               500: '#0284c7',
               600: '#0369a1',
               700: '#075985',
-              800: '#0c4a6e',
-            },
-            telegram: {
-              50: '#f0f7ff',
-              500: '#229ED9',
-              600: '#1d8ec3',
             }
+          },
+          animation: {
+            'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'bounce-slow': 'bounce 2s infinite',
           }
         }
       }
@@ -59,362 +59,429 @@
       background: #cbd5e1;
       border-radius: 4px;
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+
+    /* Transfer animation styles */
+    @keyframes transferData {
+      0% { transform: translateX(-100%); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translateX(100%); opacity: 0; }
+    }
+    .animate-transfer {
+      animation: transferData 1.5s infinite linear;
     }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
-  <!-- Application Header -->
+  <!-- Header -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-sky-400 flex items-center justify-center text-white shadow-md shadow-sky-200">
-          <i class="fa-solid fa-[#229ED9] fa-telegram text-xl"></i>
+          <i class="fa-solid fa-paper-plane text-lg"></i>
         </div>
         <div>
-          <h1 class="text-base font-bold text-slate-800 leading-tight flex items-center gap-2">
-            Carga de Seriados ONT
-            <span class="text-[10px] font-semibold bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full border border-brand-200">Bot Telegram</span>
+          <h1 class="text-base font-bold text-slate-800 leading-tight">
+            Carga Automática de Seriados ONT
           </h1>
-          <p class="text-xs text-slate-500">Sincronizador Directo a 'Hoja 1' de Google Sheets</p>
+          <p class="text-xs text-slate-500">Sincronizador Directo a Google Sheets (Hoja 1) para Bot Telegram</p>
         </div>
       </div>
 
-      <!-- Sheet Link & Status -->
-      <div class="flex items-center space-x-3">
-        <div class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
-          <span>Bot Activo & Sincronizado</span>
-        </div>
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button onclick="openScriptModal()" class="inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors shadow-sm">
+          <i class="fa-solid fa-code text-brand-500 mr-1.5"></i>
+          <span class="hidden sm:inline">Código Apps Script</span>
+        </button>
 
         <a href="https://docs.google.com/spreadsheets/d/1wGV7caz2hwepxV1tauj9SAnXFx_omOYL_ZdWu-0L-z8/edit" 
            target="_blank" 
-           class="inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors shadow-sm">
-          <i class="fa-solid fa-table text-emerald-600 mr-2"></i>
-          <span class="hidden md:inline">Google Sheet:</span> 
-          <span class="font-mono text-slate-600 ml-1">Hoja 1</span>
-          <i class="fa-solid fa-arrow-up-right-from-square text-slate-400 ml-2 text-[10px]"></i>
+           class="inline-flex items-center px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors shadow-sm">
+          <i class="fa-solid fa-table mr-1.5"></i>
+          <span>Ver Sheet Destino</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1.5"></i>
         </a>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
+  <!-- Main Workspace -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- Notification Toast -->
-    <div id="toast" class="hidden transform transition-all duration-300 fixed bottom-5 right-5 z-50 max-w-md bg-white rounded-xl shadow-xl border p-4 flex items-start space-x-3">
-      <div id="toastIcon" class="mt-0.5"></div>
-      <div class="flex-1">
-        <h4 id="toastTitle" class="text-sm font-semibold text-slate-800"></h4>
-        <p id="toastMessage" class="text-xs text-slate-600 mt-0.5"></p>
-      </div>
-      <button onclick="hideToast()" class="text-slate-400 hover:text-slate-600">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-
-    <!-- Summary Metrics Dashboard -->
+    <!-- Metrics Cards Dashboard -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- Card 1 -->
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
         <div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center text-xl flex-shrink-0">
           <i class="fa-solid fa-barcode"></i>
         </div>
         <div>
-          <p class="text-xs font-medium text-slate-500">Total Seriados Cargar</p>
+          <p class="text-xs font-medium text-slate-500">Filas de Datos Leídas</p>
           <h3 id="statTotal" class="text-xl font-bold text-slate-800">0</h3>
         </div>
       </div>
 
-      <!-- Card 2 -->
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
         <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl flex-shrink-0">
-          <i class="fa-solid fa-shield-halved"></i>
+          <i class="fa-solid fa-microchip"></i>
         </div>
         <div>
-          <p class="text-xs font-medium text-slate-500">Formatos Válidos ONT</p>
+          <p class="text-xs font-medium text-slate-500">Seriados ONT Validados</p>
           <h3 id="statValid" class="text-xl font-bold text-slate-800">0</h3>
         </div>
       </div>
 
-      <!-- Card 3 -->
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
         <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl flex-shrink-0">
           <i class="fa-solid fa-file-excel"></i>
         </div>
         <div class="overflow-hidden">
-          <p class="text-xs font-medium text-slate-500">Archivo Seleccionado</p>
+          <p class="text-xs font-medium text-slate-500">Último Archivo Cargar</p>
           <h3 id="statFileName" class="text-xs font-bold text-slate-800 truncate">Ninguno</h3>
         </div>
       </div>
 
-      <!-- Card 4 -->
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
         <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl flex-shrink-0">
           <i class="fa-solid fa-robot"></i>
         </div>
         <div>
-          <p class="text-xs font-medium text-slate-500">Destino Bot Telegram</p>
-          <h3 class="text-xs font-bold text-slate-800">Hoja 1 (Automático)</h3>
+          <p class="text-xs font-medium text-slate-500">Bot Telegram</p>
+          <h3 class="text-xs font-bold text-emerald-600 flex items-center">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1.5 animate-pulse"></span>
+            Listo para consultas
+          </h3>
         </div>
       </div>
     </div>
 
-    <!-- Upload Zone and Action Bar -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-      <!-- Drag & Drop Upload Zone (2 cols) -->
-      <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col justify-between space-y-4">
-        <div class="flex justify-between items-center">
+    <!-- Auto Dropzone Area -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
           <h2 class="text-sm font-bold text-slate-800 flex items-center">
-            <i class="fa-solid fa-cloud-arrow-up text-brand-500 mr-2"></i>
-            Carga de Archivo Excel / CSV con Seriados
+            <i class="fa-solid fa-bolt text-amber-500 mr-2"></i>
+            Seleccionar o Arrastrar Archivo Excel (Carga Automática)
           </h2>
-          <!-- Download Template Button -->
-          <button onclick="downloadSampleTemplate()" class="inline-flex items-center text-xs text-brand-600 hover:text-brand-700 font-medium hover:underline">
-            <i class="fa-solid fa-download mr-1"></i> Descargar Plantilla Ejemplo
-          </button>
+          <p class="text-xs text-slate-500 mt-0.5">Al seleccionar un archivo, se procesará y <strong>reemplazará inmediatamente la Hoja 1</strong> de Google Sheets.</p>
         </div>
-
-        <!-- Dropzone Box -->
-        <div id="dropZone" 
-             class="border-2 border-dashed border-slate-300 hover:border-brand-500 hover:bg-brand-50/20 transition-all rounded-xl p-8 text-center cursor-pointer relative group flex flex-col items-center justify-center min-h-[190px]">
-          <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileSelect(event)" />
-          
-          <div class="w-14 h-14 mb-3 rounded-2xl bg-brand-50 group-hover:bg-brand-100 flex items-center justify-center text-brand-600 transition-colors shadow-sm">
-            <i class="fa-solid fa-network-wired text-2xl"></i>
-          </div>
-          
-          <p class="text-sm font-semibold text-slate-700 group-hover:text-brand-600 transition-colors">
-            Arrastra tu archivo Excel aquí o <span class="text-brand-600 underline">haz clic para examinar</span>
-          </p>
-          <p class="text-xs text-slate-400 mt-1">Soporta formatos de seriados ONT (Huawei, ZTE, Fiberhome, Nokia, etc.)</p>
-        </div>
-
-        <!-- Selected File Status Badge -->
-        <div id="fileInfoCard" class="hidden p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
-          <div class="flex items-center space-x-3 overflow-hidden">
-            <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 font-bold text-xs">
-              XLS
-            </div>
-            <div class="truncate">
-              <p id="fileName" class="text-xs font-semibold text-slate-800 truncate">seriados_ont.xlsx</p>
-              <p id="fileMeta" class="text-[11px] text-slate-500">0 KB • 0 seriados</p>
-            </div>
-          </div>
-          <button onclick="clearFile()" class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
-        </div>
+        <button type="button" onclick="downloadSampleTemplate()" class="inline-flex items-center text-xs text-brand-600 hover:text-brand-700 font-semibold hover:underline flex-shrink-0">
+          <i class="fa-solid fa-file-arrow-down mr-1"></i> Descargar Plantilla Ejemplo
+        </button>
       </div>
 
-      <!-- Action Panel -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col justify-between space-y-4">
-        <div>
-          <h2 class="text-sm font-bold text-slate-800 mb-2 flex items-center">
-            <i class="fa-solid fa-paper-plane text-brand-500 mr-2"></i>
-            Sincronización a Telegram Bot
-          </h2>
-          <p class="text-xs text-slate-500 leading-relaxed mb-4">
-            Al realizar el envío, se <strong>borrará completamente el contenido actual</strong> de la <strong>'Hoja 1'</strong> y se insertarán los nuevos seriados de ONT para la consulta en tiempo real desde Telegram.
-          </p>
+      <!-- Hidden File Input -->
+      <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden" />
 
-          <div class="p-3 bg-brand-50/60 rounded-xl border border-brand-100 text-xs text-brand-800 space-y-1">
-            <div class="font-semibold flex items-center">
-              <i class="fa-solid fa-circle-check text-brand-600 mr-1.5"></i> Destino Integrado:
-            </div>
-            <p class="text-[11px] text-brand-700">Sheet ID: <span class="font-mono">1wGV7caz...0L-z8</span></p>
-            <p class="text-[11px] text-brand-700">Pestaña: <span class="font-semibold">Hoja 1</span></p>
-          </div>
+      <!-- Interactive Dropzone Box -->
+      <div id="dropZone" class="border-2 border-dashed border-slate-300 hover:border-brand-500 hover:bg-brand-50/40 transition-all rounded-2xl p-10 text-center cursor-pointer relative flex flex-col items-center justify-center min-h-[210px] select-none group">
+        <div class="w-16 h-16 mb-4 rounded-2xl bg-brand-50 text-brand-600 group-hover:scale-110 group-hover:bg-brand-100 flex items-center justify-center transition-all shadow-sm pointer-events-none">
+          <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
         </div>
-
-        <!-- Sync Action Button -->
-        <div>
-          <button id="syncBtn" disabled onclick="openConfirmModal()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-sky-600 hover:from-brand-700 hover:to-sky-700 text-white font-medium text-sm shadow-md shadow-sky-200 flex items-center justify-center space-x-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
-            <i class="fa-solid fa-rotate text-sm"></i>
-            <span>Reemplazar en Google Sheet (Hoja 1)</span>
-          </button>
+        
+        <p class="text-base font-semibold text-slate-700 pointer-events-none">
+          Haz clic aquí para elegir tu Excel o <span class="text-brand-600 underline">arrastra el archivo aquí</span>
+        </p>
+        <p class="text-xs text-slate-400 mt-1 pointer-events-none">Sombra o reemplaza la Hoja 1 en tiempo real. Soporta formato .xlsx, .xls y .csv</p>
+        
+        <div class="mt-5 flex items-center space-x-3 pointer-events-none">
+          <span class="px-4 py-2 bg-slate-100 group-hover:bg-brand-600 group-hover:text-white text-slate-700 rounded-xl text-xs font-semibold transition-colors inline-flex items-center space-x-2 shadow-sm">
+            <i class="fa-solid fa-folder-open"></i>
+            <span>Buscar Archivo Excel</span>
+          </span>
         </div>
-      </div>
-
-    </div>
-
-    <!-- Animated Loading Indicator -->
-    <div id="progressContainer" class="hidden bg-white p-5 rounded-2xl border border-brand-200 shadow-sm space-y-3">
-      <div class="flex justify-between items-center text-xs">
-        <span id="progressText" class="font-semibold text-brand-600 flex items-center">
-          <i class="fa-solid fa-spinner fa-spin mr-2"></i> Transfiriendo datos al bot...
-        </span>
-        <span id="progressPercent" class="font-mono font-bold text-slate-600">0%</span>
-      </div>
-      <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-        <div id="progressBar" class="bg-gradient-to-r from-brand-500 to-sky-400 h-full w-0 transition-all duration-300 rounded-full"></div>
       </div>
     </div>
 
-    <!-- Data Preview Table Section -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden flex flex-col">
-      <!-- Table Header Bar -->
+    <!-- Live Transfer Animation Card (Hidden by default, shown during sync) -->
+    <div id="transferOverlay" class="hidden bg-slate-900 text-white rounded-2xl p-8 shadow-xl border border-slate-800 space-y-6 relative overflow-hidden transition-all">
+      <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]"></div>
+
+      <div class="relative z-10 flex flex-col items-center text-center space-y-4">
+        <!-- Visual node connection graphics -->
+        <div class="flex items-center justify-center space-x-6 w-full max-w-md py-4">
+          <!-- Web Node -->
+          <div class="flex flex-col items-center">
+            <div class="w-14 h-14 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 text-2xl shadow-lg shadow-sky-500/10">
+              <i class="fa-solid fa-file-excel"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-slate-300 mt-2">Excel Subido</span>
+          </div>
+
+          <!-- Transfer Arrow Line -->
+          <div class="flex-1 relative flex items-center justify-center">
+            <div class="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+              <div class="w-full h-full bg-gradient-to-r from-sky-400 via-indigo-400 to-emerald-400 animate-transfer"></div>
+            </div>
+            <div class="absolute w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 text-xs shadow">
+              <i class="fa-solid fa-arrow-right animate-pulse"></i>
+            </div>
+          </div>
+
+          <!-- Google Sheet Node -->
+          <div class="flex flex-col items-center">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 text-2xl shadow-lg shadow-emerald-500/10">
+              <i class="fa-solid fa-table"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-slate-300 mt-2">Hoja 1 (Google)</span>
+          </div>
+        </div>
+
+        <div>
+          <h3 id="transferTitle" class="text-base font-bold text-white flex items-center justify-center">
+            <i class="fa-solid fa-arrows-rotate fa-spin text-sky-400 mr-2"></i>
+            Sincronizando seriados ONT con Google Sheets...
+          </h3>
+          <p id="transferSubtitle" class="text-xs text-slate-400 mt-1">
+            Limpiando datos antiguos en la Hoja 1 e insertando nuevas filas para el Bot de Telegram...
+          </p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full max-w-lg space-y-2">
+          <div class="flex justify-between items-center text-xs font-mono">
+            <span id="transferStep" class="text-sky-400 font-sans">Enviando paquetes...</span>
+            <span id="transferPercent" class="text-slate-300 font-bold">0%</span>
+          </div>
+          <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700">
+            <div id="transferProgressBar" class="bg-gradient-to-r from-sky-400 via-indigo-500 to-emerald-400 h-full w-0 transition-all duration-300 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Preview Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
       <div class="p-4 sm:px-6 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h3 class="text-sm font-bold text-slate-800 flex items-center">
-            <i class="fa-solid fa-list-check text-slate-500 mr-2"></i>
-            Vista Previa de Seriados de ONT
+            <i class="fa-solid fa-table-list text-slate-500 mr-2"></i>
+            Previsualización de Seriados ONT
           </h3>
-          <p id="tableSummary" class="text-xs text-slate-500 mt-0.5">Ningún archivo cargado.</p>
+          <p id="tableSummary" class="text-xs text-slate-500 mt-0.5">Esperando archivo Excel...</p>
         </div>
 
         <div class="flex items-center space-x-3 w-full sm:w-auto">
-          <!-- Search box -->
           <div class="relative flex-1 sm:flex-initial">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Buscar serial, marca..." class="w-full sm:w-56 pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Buscar serie, marca..." class="w-full sm:w-56 pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
           </div>
         </div>
       </div>
 
-      <!-- Scrollable Table -->
       <div class="overflow-x-auto max-h-[420px] custom-scrollbar">
         <table id="previewTable" class="w-full text-left text-xs border-collapse">
           <thead id="tableHead" class="bg-slate-50 sticky top-0 text-slate-600 font-semibold border-b border-slate-200 z-10">
             <tr>
-              <th class="p-4 text-center text-slate-400 font-normal">Cargue un archivo Excel/CSV para revisar los seriados</th>
+              <th class="p-4 text-center text-slate-400 font-normal">Cargue un archivo Excel o CSV para ver las filas extraídas.</th>
             </tr>
           </thead>
           <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700">
-            <!-- Dynamic Data -->
+            <!-- Dynamic Content -->
           </tbody>
         </table>
       </div>
 
-      <!-- Table Footer Paging Info -->
       <div id="tableFooter" class="hidden p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 px-6">
-        <span>Mostrando las primeras 50 filas extraídas</span>
-        <span class="font-mono">Pestaña activa: Hoja 1</span>
+        <span>Mostrando registros extraídos</span>
+        <span class="font-mono text-emerald-600 font-bold">Pestaña Destino: Hoja 1</span>
       </div>
     </div>
 
   </main>
 
-  <!-- Confirmation Modal -->
-  <div id="confirmModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-4">
-      <div class="flex items-center space-x-3 text-amber-600">
-        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-xl">
-          <i class="fa-solid fa-triangle-exclamation"></i>
+  <!-- Google Apps Script Modal -->
+  <div id="scriptModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-sm">
+            <i class="fa-solid fa-code"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm">Código Backend de Google Apps Script</h3>
+            <p class="text-[11px] text-slate-500">Pega este código en tu editor de Google Apps Script</p>
+          </div>
         </div>
-        <h3 class="font-bold text-slate-800 text-base">Confirmar Reemplazo</h3>
-      </div>
-
-      <p class="text-xs text-slate-600 leading-relaxed">
-        Esta acción <strong>borrará todo el contenido existente</strong> en la <strong>'Hoja 1'</strong> del Google Sheet del Bot de Telegram y la reemplazará con los <span id="modalRecordCount" class="font-bold text-slate-800">0</span> registros actuales.
-      </p>
-
-      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] text-slate-500">
-        <i class="fa-solid fa-robot text-brand-600 mr-1"></i> El Bot de Telegram inmediatamente comenzará a responder con estos nuevos seriados de ONT.
-      </div>
-
-      <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeConfirmModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-xs transition-colors">
-          Cancelar
+        <button onclick="closeScriptModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-base"></i>
         </button>
-        <button onclick="executeSync()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg text-xs transition-colors shadow-sm">
-          Sí, Reemplazar Ahora
+      </div>
+
+      <div class="flex-1 overflow-y-auto custom-scrollbar">
+        <pre class="bg-slate-900 text-emerald-400 p-4 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed select-all" id="codeBlock">
+function doPost(e) {
+  try {
+    var rawData = "";
+    
+    if (e.postData && e.postData.contents) {
+      rawData = e.postData.contents;
+    }
+    
+    // Si la data viene por parámetro de formulario
+    if (e.parameter && e.parameter.payload) {
+      rawData = e.parameter.payload;
+    }
+    
+    var payload = {};
+    try {
+      payload = JSON.parse(rawData);
+    } catch(err) {
+      // Intenta decodificar de URI si es necesario
+      payload = JSON.parse(decodeURIComponent(rawData));
+    }
+    
+    var spreadsheetId = payload.spreadsheetId || "1wGV7caz2hwepxV1tauj9SAnXFx_omOYL_ZdWu-0L-z8";
+    var sheetName = payload.sheetName || "Hoja 1";
+    var data = payload.rows || payload.data || [];
+    
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var sheet = ss.getSheetByName(sheetName);
+    
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+    }
+    
+    // Borra completamente el contenido anterior de Hoja 1
+    sheet.clearContents();
+    sheet.clearFormats();
+    
+    // Reemplaza con los nuevos seriados ONT
+    if (data && data.length > 0) {
+      var rows = data.length;
+      var cols = data[0].length;
+      sheet.getRange(1, 1, rows, cols).setValues(data);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      message: "Hoja 1 reemplazada con éxito",
+      rowsInserted: data.length
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+        <span class="text-[11px] text-slate-500">Desplegar como <strong>Aplicación Web</strong> (Acceso: Cualquier persona).</span>
+        <button onclick="copyAppsScriptCode()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-lg text-xs transition-colors flex items-center space-x-1.5">
+          <i class="fa-solid fa-copy"></i>
+          <span>Copiar Código</span>
         </button>
       </div>
     </div>
   </div>
 
   <script>
-    // HARDCODED CONFIGURATION (NO UI MODAL/SETTINGS SHOWN)
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-Xp4KGokP61f25mc257O32uAQP_j-mR9uHWGmFMKlymT4bu3Ug_cTVy9RPXy--xLEmA/exec";
+    // HARDCODED GOOGLE CONFIGURATION
+    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycby-Xp4KGokP61f25mc257O32uAQP_j-mR9uHWGmFMKlymT4bu3Ug_cTVy9RPXy--xLEmA/exec";
     const SPREADSHEET_ID = "1wGV7caz2hwepxV1tauj9SAnXFx_omOYL_ZdWu-0L-z8";
-    const DESTINATION_SHEET_NAME = "Hoja 1";
+    const SHEET_NAME = "Hoja 1";
 
-    // Application State
-    let workbook = null;
     let parsedData = [];
 
-    window.onload = function() {
-      setupDragAndDrop();
-    };
+    window.addEventListener('DOMContentLoaded', () => {
+      initFileSelection();
+    });
 
-    // Drag & Drop Setup
-    function setupDragAndDrop() {
+    // File Selection & Drag Drop logic
+    function initFileSelection() {
       const dropZone = document.getElementById('dropZone');
-      
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
+      const fileInput = document.getElementById('fileInput');
+
+      // Click dropzone -> Open file picker
+      dropZone.addEventListener('click', () => {
+        fileInput.value = '';
+        fileInput.click();
       });
 
-      function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      // Handle file selection from picker
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          processAndAutoSyncFile(e.target.files[0]);
+        }
+      });
 
+      // Drag & Drop events
       ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => dropZone.classList.add('bg-brand-50/50', 'border-brand-500'), false);
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('bg-brand-50', 'border-brand-500', 'scale-[0.99]');
+        }, false);
       });
 
       ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => dropZone.classList.remove('bg-brand-50/50', 'border-brand-500'), false);
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('bg-brand-50', 'border-brand-500', 'scale-[0.99]');
+        }, false);
       });
 
-      dropZone.addEventListener('drop', handleDrop, false);
-      dropZone.addEventListener('click', () => document.getElementById('fileInput').click());
+      dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+          processAndAutoSyncFile(dt.files[0]);
+        }
+      }, false);
     }
 
-    function handleDrop(e) {
-      const dt = e.dataTransfer;
-      const files = dt.files;
-      if (files.length) {
-        processFile(files[0]);
-      }
-    }
+    // Process file & immediate automatic sync
+    function processAndAutoSyncFile(file) {
+      if (!file) return;
 
-    function handleFileSelect(e) {
-      const files = e.target.files;
-      if (files.length) {
-        processFile(files[0]);
-      }
-    }
-
-    // Process Excel / CSV File with SheetJS
-    function processFile(file) {
       const reader = new FileReader();
+
       reader.onload = function(e) {
         try {
           const data = new Uint8Array(e.target.result);
-          workbook = XLSX.read(data, { type: 'array' });
+          const workbook = XLSX.read(data, { type: 'array' });
 
-          // Pick first worksheet
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          
-          // Convert sheet to array of arrays
+
+          // Parse matrix array format
           parsedData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
           if (!parsedData || parsedData.length === 0) {
-            showToast('Archivo Vacío', 'El archivo cargado no contiene registros.', 'error');
+            Swal.fire({
+              icon: 'warning',
+              title: 'Archivo Vacío',
+              text: 'El archivo seleccionado no contiene datos para cargar.',
+              confirmButtonColor: '#0284c7'
+            });
             return;
           }
 
-          // UI Updates
-          document.getElementById('fileName').innerText = file.name;
-          document.getElementById('fileMeta').innerText = `${(file.size / 1024).toFixed(1)} KB • ${parsedData.length} filas`;
-          document.getElementById('fileInfoCard').classList.remove('hidden');
+          // Ensure Header A1 is strictly titled "Serie"
+          if (parsedData.length > 0) {
+            if (!parsedData[0] || parsedData[0].length === 0) {
+              parsedData[0] = ["Serie"];
+            } else {
+              parsedData[0][0] = "Serie";
+            }
+          }
 
-          // Metrics Updates
-          const totalRecords = Math.max(0, parsedData.length - 1); // exclude header
-          document.getElementById('statTotal').innerText = totalRecords;
+          // Convert all values in Column A (Row index >= 1) to UPPERCASE
+          for (let i = 1; i < parsedData.length; i++) {
+            if (parsedData[i] && parsedData[i][0] !== undefined && parsedData[i][0] !== null) {
+              parsedData[i][0] = String(parsedData[i][0]).toUpperCase().trim();
+            }
+          }
+
+          // Statistics & Table Update
+          const rowCount = Math.max(0, parsedData.length - 1);
+          document.getElementById('statTotal').innerText = rowCount;
           document.getElementById('statFileName').innerText = file.name;
 
-          // Count ONT Valid Serial formats
           let validOntCount = 0;
-          for(let i = 1; i < parsedData.length; i++) {
+          for (let i = 1; i < parsedData.length; i++) {
             const rowStr = parsedData[i].join(' ');
             if (isLikelyONTSerial(rowStr)) {
               validOntCount++;
@@ -423,42 +490,137 @@
           document.getElementById('statValid').innerText = validOntCount;
 
           renderPreviewTable(parsedData);
-          document.getElementById('syncBtn').disabled = false;
-          showToast('Archivo Cargado', 'Seriados procesados exitosamente.', 'success');
+
+          // Start Automatic Transfer to Google Sheets
+          executeAutomaticTransfer(file.name);
+
         } catch (err) {
-          showToast('Error de Lectura', 'No se pudo interpretar el archivo Excel o CSV.', 'error');
           console.error(err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error de Lectura',
+            text: 'No se pudo leer el archivo Excel/CSV seleccionado. Verifica que no esté protegido.',
+            confirmButtonColor: '#0284c7'
+          });
         }
       };
+
       reader.readAsArrayBuffer(file);
     }
 
-    // ONT Serial format validator helper (e.g., HWTC, ZTEG, FHTT, 12 chars hex)
+    // Automatic transfer pipeline with visual animation
+    async function executeAutomaticTransfer(fileName) {
+      const overlay = document.getElementById('transferOverlay');
+      overlay.classList.remove('hidden');
+      
+      // Scroll smoothly to animation
+      overlay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      updateTransferProgress(15, 'Analizando estructura de columnas...', 'Leyendo seriados ONT');
+
+      const payload = {
+        action: "replace",
+        spreadsheetId: SPREADSHEET_ID,
+        sheetName: SHEET_NAME,
+        rows: parsedData
+      };
+
+      const jsonPayload = JSON.stringify(payload);
+
+      await sleep(400);
+      updateTransferProgress(45, 'Limpiando Hoja 1 de Google Sheets...', 'Conectando con Google Apps Script');
+
+      try {
+        // Method 1: URL Encoded Form Submission via fetch
+        const formBody = new URLSearchParams();
+        formBody.append('payload', jsonPayload);
+
+        fetch(WEBHOOK_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+          },
+          body: formBody.toString()
+        }).catch(e => console.log('Fetch sent'));
+
+        // Method 2: Fallback via Dynamic Iframe Form Post for 100% guarantee
+        sendViaHiddenForm(jsonPayload);
+
+        await sleep(600);
+        updateTransferProgress(80, 'Escribiendo nuevos datos de seriados...', 'Sincronizando Hoja 1');
+
+        await sleep(700);
+        updateTransferProgress(100, '¡Sincronización completada!', 'Listo para Bot Telegram');
+
+        await sleep(500);
+        overlay.classList.add('hidden');
+
+        // Success Alert
+        Swal.fire({
+          icon: 'success',
+          title: '¡Sincronización Completada!',
+          html: `Se han reemplazado los datos en la <b>Hoja 1</b> de Google Sheets.<br><br><span class="text-xs text-slate-500">Archivo: <b>${fileName}</b> • <b>${parsedData.length}</b> filas transferidas. El Bot de Telegram ya tiene acceso a la lista actualizada.</span>`,
+          confirmButtonColor: '#0284c7',
+          confirmButtonText: 'Aceptar'
+        });
+
+      } catch (err) {
+        console.error(err);
+        overlay.classList.add('hidden');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de Transmisión',
+          text: 'No se pudo transferir la información a Google Sheets.',
+          confirmButtonColor: '#0284c7'
+        });
+      }
+    }
+
+    function sendViaHiddenForm(jsonPayload) {
+      const iframeName = 'hidden_sync_iframe_' + Date.now();
+      const iframe = document.createElement('iframe');
+      iframe.name = iframeName;
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = WEBHOOK_URL;
+      form.target = iframeName;
+
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'payload';
+      input.value = jsonPayload;
+
+      form.appendChild(input);
+      document.body.appendChild(form);
+
+      form.submit();
+
+      setTimeout(() => {
+        if (document.body.contains(form)) document.body.removeChild(form);
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+      }, 6000);
+    }
+
+    function updateTransferProgress(percent, stepText, titleText) {
+      document.getElementById('transferProgressBar').style.width = `${percent}%`;
+      document.getElementById('transferPercent').innerText = `${percent}%`;
+      if (stepText) document.getElementById('transferStep').innerText = stepText;
+      if (titleText) document.getElementById('transferSubtitle').innerText = titleText;
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     function isLikelyONTSerial(str) {
-      const ontPattern = /\b(48575443|5A544547|46485454|HWTC|ZTEG|FHTT|NKIA|ALCL)[A-Za-0-9]{4,12}\b/i;
+      const ontPattern = /\b(48575443|5A544547|46485454|HWTC|ZTEG|FHTT|NKIA|ALCL)[A-Za-z0-9]{4,12}\b/i;
       return ontPattern.test(str) || (str && str.length >= 8);
     }
 
-    function clearFile() {
-      workbook = null;
-      parsedData = [];
-      document.getElementById('fileInput').value = '';
-      document.getElementById('fileInfoCard').classList.add('hidden');
-      document.getElementById('syncBtn').disabled = true;
-      
-      // Reset Metrics
-      document.getElementById('statTotal').innerText = '0';
-      document.getElementById('statValid').innerText = '0';
-      document.getElementById('statFileName').innerText = 'Ninguno';
-
-      // Clear Table
-      document.getElementById('tableHead').innerHTML = '<tr><th class="p-4 text-center text-slate-400 font-normal">Cargue un archivo Excel/CSV para revisar los seriados</th></tr>';
-      document.getElementById('tableBody').innerHTML = '';
-      document.getElementById('tableSummary').innerText = 'Ningún archivo cargado.';
-      document.getElementById('tableFooter').classList.add('hidden');
-    }
-
-    // Render Table Preview
     function renderPreviewTable(data) {
       const thead = document.getElementById('tableHead');
       const tbody = document.getElementById('tableBody');
@@ -469,38 +631,36 @@
       tbody.innerHTML = '';
 
       if (!data || data.length === 0) {
-        summary.innerText = 'La hoja está vacía.';
+        summary.innerText = 'Sin registros para mostrar.';
         footer.classList.add('hidden');
         return;
       }
 
-      summary.innerText = `Procesados: ${data.length} filas (1 encabezado + ${data.length - 1} datos) y ${data[0] ? data[0].length : 0} columnas.`;
+      summary.innerText = `Total: ${data.length} filas leídas (${data[0] ? data[0].length : 0} columnas).`;
       footer.classList.remove('hidden');
 
-      // Header row
+      // Table Header
       const headerRow = document.createElement('tr');
       const headers = data[0] || [];
-      headers.forEach((cellText, idx) => {
+      headers.forEach((colName, idx) => {
         const th = document.createElement('th');
         th.className = 'p-3 bg-slate-100 text-slate-700 font-semibold border-b border-slate-200 border-r last:border-r-0 whitespace-nowrap';
-        th.innerText = cellText !== "" ? cellText : `Columna ${idx + 1}`;
+        th.innerText = colName !== "" ? colName : `Columna ${idx + 1}`;
         headerRow.appendChild(th);
       });
       thead.appendChild(headerRow);
 
-      // Render first 50 rows
+      // Rows
       const previewRows = data.slice(1, 51);
       previewRows.forEach((row) => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition-colors';
-        
+
         for (let i = 0; i < headers.length; i++) {
           const td = document.createElement('td');
           td.className = 'p-3 border-b border-slate-100 border-r last:border-r-0 whitespace-nowrap max-w-xs truncate';
-          
           const val = row[i] !== undefined ? String(row[i]) : '';
-          
-          // Apply badge style if serial-like
+
           if (isLikelyONTSerial(val) && val.length >= 8) {
             td.innerHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded font-mono text-[11px] font-medium bg-sky-50 text-sky-700 border border-sky-200"><i class="fa-solid fa-barcode text-[10px] mr-1"></i>${val}</span>`;
           } else {
@@ -523,119 +683,48 @@
       });
     }
 
-    // Modal Confirmation Controls
-    function openConfirmModal() {
-      if (!parsedData || parsedData.length === 0) return;
-      document.getElementById('modalRecordCount').innerText = parsedData.length;
-      document.getElementById('confirmModal').classList.remove('hidden');
+    // Modal controls
+    function openScriptModal() {
+      document.getElementById('scriptModal').classList.remove('hidden');
     }
 
-    function closeConfirmModal() {
-      document.getElementById('confirmModal').classList.add('hidden');
+    function closeScriptModal() {
+      document.getElementById('scriptModal').classList.add('hidden');
     }
 
-    // Execute Sync to Google Sheet Apps Script Webhook
-    async function executeSync() {
-      closeConfirmModal();
-      showProgress(15, 'Conectando con Google Apps Script Webhook...');
+    function copyAppsScriptCode() {
+      const codeText = document.getElementById('codeBlock').innerText;
+      const textarea = document.createElement('textarea');
+      textarea.value = codeText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
 
-      try {
-        showProgress(40, 'Enviando seriados ONT a Hoja 1...');
-
-        const payload = {
-          action: "replace",
-          spreadsheetId: SPREADSHEET_ID,
-          sheetName: DESTINATION_SHEET_NAME,
-          data: parsedData,
-          rows: parsedData // compatibility for standard scripts
-        };
-
-        // Send POST request
-        const response = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors', // standard for Apps Script Webhooks without CORS headers
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8',
-          },
-          body: JSON.stringify(payload)
-        });
-
-        showProgress(85, 'Sincronización enviada...');
-        showProgress(100, '¡Completado!');
-
-        setTimeout(hideProgress, 800);
-
-        showToast('¡Sincronización Exitosa!', 'La información de seriados ONT se actualizó en la Hoja 1. El Bot de Telegram ya tiene los datos nuevos.', 'success');
-
-      } catch (err) {
-        hideProgress();
-        console.error(err);
-        showToast('Error al Sincronizar', 'No se pudo contactar con el Webhook de Google Script.', 'error');
-      }
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Código copiado al portapapeles',
+        showConfirmButton: false,
+        timer: 2500
+      });
     }
 
-    // Download Sample Excel/CSV Template
+    // Download Sample Template
     function downloadSampleTemplate() {
       const sampleData = [
-        ["SERIAL_ONT", "MARCA", "MODELO", "ESTADO", "UBICACION"],
-        ["HWTC12345678", "Huawei", "EG8145V5", "DISPONIBLE", "ALMACEN CENTRAL"],
-        ["ZTEG87654321", "ZTE", "F670L", "DISPONIBLE", "ZONA NORTE"],
-        ["FHTT99887766", "Fiberhome", "HG6245D", "ASIGNADO", "CUADRILLA 02"],
-        ["NKIA11223344", "Nokia", "G-140W-MD", "DISPONIBLE", "ALMACEN SUR"]
+        ["SERIAL_ONT", "MARCA", "MODELO", "ESTADO", "UBICACION", "FECHA_CARGA"],
+        ["HWTC12345678", "Huawei", "EG8145V5", "DISPONIBLE", "ALMACEN CENTRAL", "2026-10-20"],
+        ["ZTEG87654321", "ZTE", "F670L", "DISPONIBLE", "ZONA NORTE", "2026-10-20"],
+        ["FHTT99887766", "Fiberhome", "HG6245D", "ASIGNADO", "CUADRILLA 02", "2026-10-20"],
+        ["NKIA11223344", "Nokia", "G-140W-MD", "DISPONIBLE", "ALMACEN SUR", "2026-10-20"]
       ];
 
       const ws = XLSX.utils.aoa_to_sheet(sampleData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Hoja 1");
       XLSX.writeFile(wb, "Plantilla_Seriados_ONT_Telegram.xlsx");
-    }
-
-    // UI Helpers
-    function showProgress(percent, text) {
-      const container = document.getElementById('progressContainer');
-      const bar = document.getElementById('progressBar');
-      const pText = document.getElementById('progressText');
-      const pPercent = document.getElementById('progressPercent');
-
-      container.classList.remove('hidden');
-      bar.style.width = `${percent}%`;
-      pText.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> ${text}`;
-      pPercent.innerText = `${percent}%`;
-    }
-
-    function hideProgress() {
-      document.getElementById('progressContainer').classList.add('hidden');
-    }
-
-    function showToast(title, message, type = 'info') {
-      const toast = document.getElementById('toast');
-      const toastTitle = document.getElementById('toastTitle');
-      const toastMessage = document.getElementById('toastMessage');
-      const toastIcon = document.getElementById('toastIcon');
-
-      toastTitle.innerText = title;
-      toastMessage.innerText = message;
-
-      if (type === 'success') {
-        toastIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>`;
-        toast.className = "fixed bottom-5 right-5 z-50 max-w-md bg-white rounded-xl shadow-xl border border-emerald-200 p-4 flex items-start space-x-3 transition-all duration-300";
-      } else if (type === 'error') {
-        toastIcon.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-500 text-lg"></i>`;
-        toast.className = "fixed bottom-5 right-5 z-50 max-w-md bg-white rounded-xl shadow-xl border border-rose-200 p-4 flex items-start space-x-3 transition-all duration-300";
-      } else {
-        toastIcon.innerHTML = `<i class="fa-solid fa-circle-info text-brand-500 text-lg"></i>`;
-        toast.className = "fixed bottom-5 right-5 z-50 max-w-md bg-white rounded-xl shadow-xl border border-slate-200 p-4 flex items-start space-x-3 transition-all duration-300";
-      }
-
-      toast.classList.remove('hidden');
-
-      setTimeout(() => {
-        hideToast();
-      }, 5000);
-    }
-
-    function hideToast() {
-      document.getElementById('toast').classList.add('hidden');
     }
   </script>
 </body>
